@@ -1,0 +1,33 @@
+{% extends "templates/golbazaar_base.html" %}
+{% block title %}Items · Golbazaar{% endblock %}
+{% block golbazaar_content %}
+<div class="my-4">
+	<h2 class="mb-4">Items</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Item Name</th>
+				<th>Group</th>
+				<th>UOM</th>
+				<th>Disabled</th>
+				<th>Modified</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for it in items %}
+			<tr>
+				<td><a href="/app/item/{{ it.name }}" target="_blank">{{ it.name }}</a></td>
+				<td>{{ it.item_name }}</td>
+				<td>{{ it.item_group }}</td>
+				<td>{{ it.stock_uom }}</td>
+				<td>{{ it.disabled and 'Yes' or 'No' }}</td>
+				<td>{{ it.modified }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,62 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">🏪 {{ app_title }}</h1>
+                <p class="lead text-muted">{{ app_description }}</p>
+            </div>
+            
+            <div class="row">
+                {% for feature in features %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <span style="font-size: 3rem;">{{ feature.icon }}</span>
+                            </div>
+                            <h5 class="card-title">{{ feature.title }}</h5>
+                            <p class="card-text text-muted">{{ feature.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="text-center mt-5">
+                <div class="alert alert-info">
+                    <h5>Welcome to Golbazaar!</h5>
+                    <p class="mb-0">Your custom business application is ready to use.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.alert {
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,34 @@
+{
+	"doctype": "Workspace",
+	"name": "Golbazaar",
+	"public": 1,
+	"title": "Golbazaar",
+	"label": "Golbazaar",
+	"module": "Golbazaar",
+	"icon": "octicon octicon-briefcase",
+	"sequence_id": 1,
+	"is_hidden": 0,
+	"hide_custom": 0,
+	"content": "[{\"id\":\"gb_hdr_shortcuts\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"gb_sc_item\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"gb_sc_customer\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"gb_sc_supplier\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier\",\"col\":3}},{\"id\":\"gb_sc_sales_invoice\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Invoice\",\"col\":3}},{\"id\":\"gb_spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"gb_hdr_cards\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"gb_card_accounting\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting\",\"col\":4}},{\"id\":\"gb_card_stock\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock\",\"col\":4}},{\"id\":\"gb_card_crm\",\"type\":\"card\",\"data\":{\"card_name\":\"CRM\",\"col\":4}}]",
+	"shortcuts": [
+		{ "label": "Item", "link_to": "Item", "type": "DocType" },
+		{ "label": "Customer", "link_to": "Customer", "type": "DocType" },
+		{ "label": "Supplier", "link_to": "Supplier", "type": "DocType" },
+		{ "label": "Sales Invoice", "link_to": "Sales Invoice", "type": "DocType" }
+	],
+	"links": [
+		{ "hidden": 0, "is_query_report": 0, "label": "Accounting", "link_count": 0, "onboard": 0, "type": "Card Break" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Chart of Accounts", "link_count": 0, "link_to": "Account", "link_type": "DocType", "onboard": 1, "type": "Link" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Company", "link_count": 0, "link_to": "Company", "link_type": "DocType", "onboard": 1, "type": "Link" },
+		{ "hidden": 0, "is_query_report": 0, "label": "Stock", "link_count": 0, "onboard": 0, "type": "Card Break" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Item", "link_count": 0, "link_to": "Item", "link_type": "DocType", "onboard": 1, "type": "Link" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Warehouse", "link_count": 0, "link_to": "Warehouse", "link_type": "DocType", "onboard": 1, "type": "Link" },
+		{ "hidden": 0, "is_query_report": 0, "label": "CRM", "link_count": 0, "onboard": 0, "type": "Card Break" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Lead", "link_count": 0, "link_to": "Lead", "link_type": "DocType", "onboard": 1, "type": "Link" },
+		{ "dependencies": "", "hidden": 0, "is_query_report": 0, "label": "Customer Group", "link_count": 0, "link_to": "Customer Group", "link_type": "DocType", "onboard": 1, "type": "Link" }
+	],
+	"number_cards": [],
+	"quick_lists": [],
+	"roles": []
+}
+

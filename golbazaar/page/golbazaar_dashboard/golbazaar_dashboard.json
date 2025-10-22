@@ -1,0 +1,14 @@
+{
+	"doctype": "Page",
+	"name": "golbazaar_dashboard",
+	"title": "Golbazaar Dashboard",
+	"module": "Golbazaar",
+	"developer_mode_only": 0,
+	"system_page": 0,
+	"standard": 1,
+	"roles": [
+		{ "role": "System Manager" },
+		{ "role": "All" }
+	]
+}
+

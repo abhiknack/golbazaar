@@ -1,0 +1,31 @@
+{% extends "templates/golbazaar_base.html" %}
+{% block title %}Customers · Golbazaar{% endblock %}
+{% block golbazaar_content %}
+<div class="my-4">
+	<h2 class="mb-4">Customers</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Customer Name</th>
+				<th>Group</th>
+				<th>Territory</th>
+				<th>Modified</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for c in customers %}
+			<tr>
+				<td><a href="/app/customer/{{ c.name }}" target="_blank">{{ c.name }}</a></td>
+				<td>{{ c.customer_name }}</td>
+				<td>{{ c.customer_group }}</td>
+				<td>{{ c.territory }}</td>
+				<td>{{ c.modified }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
+
+

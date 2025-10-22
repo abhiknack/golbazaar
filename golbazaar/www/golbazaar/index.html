@@ -1,0 +1,47 @@
+{% extends "templates/golbazaar_base.html" %}
+
+{% block title %}Golbazaar{% endblock %}
+
+{% block golbazaar_content %}
+<div class="my-4">
+	<h1 class="mb-4">Golbazaar</h1>
+	<p class="text-muted mb-5">Workspace overview</p>
+
+	<div class="row g-3">
+		<div class="col-12 col-md-6 col-lg-3">
+			<a class="card h-100 text-decoration-none" href="/golbazaar/items">
+				<div class="card-body">
+					<h5 class="card-title">Items</h5>
+					<p class="card-text text-muted">Manage items and catalogs</p>
+				</div>
+			</a>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<a class="card h-100 text-decoration-none" href="/golbazaar/customers">
+				<div class="card-body">
+					<h5 class="card-title">Customers</h5>
+					<p class="card-text text-muted">View and manage customers</p>
+				</div>
+			</a>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<a class="card h-100 text-decoration-none" href="/golbazaar/suppliers">
+				<div class="card-body">
+					<h5 class="card-title">Suppliers</h5>
+					<p class="card-text text-muted">View and manage suppliers</p>
+				</div>
+			</a>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<a class="card h-100 text-decoration-none" href="/golbazaar/sales-invoices">
+				<div class="card-body">
+					<h5 class="card-title">Sales Invoices</h5>
+					<p class="card-text text-muted">Create and track invoices</p>
+				</div>
+			</a>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+

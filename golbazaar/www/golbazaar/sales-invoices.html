@@ -1,0 +1,33 @@
+{% extends "templates/golbazaar_base.html" %}
+{% block title %}Sales Invoices · Golbazaar{% endblock %}
+{% block golbazaar_content %}
+<div class="my-4">
+	<h2 class="mb-4">Sales Invoices</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Customer</th>
+				<th>Posting Date</th>
+				<th>Status</th>
+				<th>Grand Total</th>
+				<th>Modified</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for si in sales_invoices %}
+			<tr>
+				<td><a href="/app/sales-invoice/{{ si.name }}" target="_blank">{{ si.name }}</a></td>
+				<td>{{ si.customer }}</td>
+				<td>{{ si.posting_date }}</td>
+				<td>{{ si.status }}</td>
+				<td>{{ si.grand_total }}</td>
+				<td>{{ si.modified }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
+
+

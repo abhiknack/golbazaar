@@ -1,0 +1,29 @@
+{% extends "templates/golbazaar_base.html" %}
+{% block title %}Suppliers · Golbazaar{% endblock %}
+{% block golbazaar_content %}
+<div class="my-4">
+	<h2 class="mb-4">Suppliers</h2>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Supplier Name</th>
+				<th>Group</th>
+				<th>Modified</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for s in suppliers %}
+			<tr>
+				<td><a href="/app/supplier/{{ s.name }}" target="_blank">{{ s.name }}</a></td>
+				<td>{{ s.supplier_name }}</td>
+				<td>{{ s.supplier_group }}</td>
+				<td>{{ s.modified }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}
+
+

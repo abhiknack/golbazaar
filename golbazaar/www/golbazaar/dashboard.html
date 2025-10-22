@@ -1,0 +1,69 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_content %}
+<div class="container">
+	<div class="row">
+		<div class="col-12">
+			<h1 class="mt-4 mb-3">Golbazaar Dashboard</h1>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-8">
+			<div class="card">
+				<div class="card-header">
+					<h5 class="mb-0">Latest Items</h5>
+				</div>
+				<div class="card-body">
+					{% if items and items|length %}
+					<div class="table-responsive">
+						<table class="table table-hover">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Item Name</th>
+									<th>Group</th>
+									<th>UOM</th>
+									<th>Status</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for it in items %}
+								<tr>
+									<td>{{ it.name }}</td>
+									<td>{{ it.item_name or it.name }}</td>
+									<td>{{ it.item_group or '-' }}</td>
+									<td>{{ it.stock_uom or '-' }}</td>
+									<td>
+										{% if it.disabled %}
+										<span class="badge badge-danger">Disabled</span>
+										{% else %}
+										<span class="badge badge-success">Active</span>
+										{% endif %}
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<p class="text-muted mb-0">No Items found.</p>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		<div class="col-md-4">
+			<div class="card">
+				<div class="card-header">
+					<h5 class="mb-0">Info</h5>
+				</div>
+				<div class="card-body">
+					<p class="mb-0">This is the public Golbazaar dashboard at <code>/golbazaar/dashboard</code>.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
