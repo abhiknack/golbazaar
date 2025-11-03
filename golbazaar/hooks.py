@@ -90,7 +90,7 @@ app_license = "mit"
 # ------------
 
 # before_install = "golbazaar.install.before_install"
-after_install = "golbazaar.install.after_install"
+# after_install = "golbazaar.install.after_install"
 
 # Uninstallation
 # ------------

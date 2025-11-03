@@ -5,10 +5,32 @@ def after_install():
     """After installing golbazaar, hide unrelated Workspaces by default.
 
     Keeps:
-    - Workspaces whose module is 'Golbazaar' (best-effort, module may be empty on some versions)
+    - Workspaces whose module is 'Golbazaar' (best-effort)
     - Any names listed in site config under 'golbazaar_keep_workspaces' (list of names)
+    - Common ERPNext workspaces (Home, Accounting, Selling, Buying, Stock, CRM, HR, Projects, Support, Assets, Manufacturing, Payroll, Quality, Website, Integrations, Analytics)
     """
     keep = set()
+
+    # Default ERPNext workspaces to keep visible
+    default_keep = {
+        "Home",
+        "Accounting",
+        "Selling",
+        "Buying",
+        "Stock",
+        "CRM",
+        "HR",
+        "Projects",
+        "Support",
+        "Assets",
+        "Manufacturing",
+        "Payroll",
+        "Quality",
+        "Website",
+        "Integrations",
+        "Analytics",
+    }
+    keep.update(default_keep)
 
     # Keep workspaces explicitly configured in site config
     try:
@@ -26,19 +48,17 @@ def after_install():
         # Some versions may not have module or may error; ignore
         pass
 
-    # If no explicit keep list detected, keep none by default
+    # Apply visibility
     all_ws = frappe.get_all("Workspace", pluck="name")
     for name in all_ws:
-        if name in keep:
-            continue
         try:
-            # Unpublish/hide
+            is_keep = name in keep
+            # Set public/is_published accordingly
             if frappe.db.has_column("Workspace", "public"):
-                frappe.db.set_value("Workspace", name, "public", 0)
+                frappe.db.set_value("Workspace", name, "public", 1 if is_keep else 0)
             elif frappe.db.has_column("Workspace", "is_published"):
-                frappe.db.set_value("Workspace", name, "is_published", 0)
+                frappe.db.set_value("Workspace", name, "is_published", 1 if is_keep else 0)
         except Exception:
-            # best-effort; continue with others
             continue
 
     try:
