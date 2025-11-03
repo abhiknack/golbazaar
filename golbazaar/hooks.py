@@ -136,9 +136,9 @@ app_license = "mit"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"POS Invoice": "golbazaar.pos_invoice_override.CustomPOSInvoice"
+}
 
 # Document Events
 # ---------------
@@ -250,8 +250,13 @@ app_license = "mit"
 # }
 
 # App Data
-# ---------
 
+
+# ---------
+fixtures = [
+    "Workspace",
+    "Custom Field",
+]
 def get_data():
 	return [
 		{

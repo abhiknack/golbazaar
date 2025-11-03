@@ -1,0 +1,242 @@
+import frappe
+from frappe import _
+
+
+def _get_available_name(base_name: str) -> str:
+    """Return a unique customer name by appending (2), (3), ... if needed."""
+    if not frappe.db.exists("Customer", base_name):
+        return base_name
+    counter = 2
+    while True:
+        candidate = f"{base_name} ({counter})"
+        if not frappe.db.exists("Customer", candidate):
+            return candidate
+        counter += 1
+
+@frappe.whitelist(allow_guest=False)
+def create_customer(customer_name, company, customer_group=None, territory=None, price_list=None, currency=None, mobile_no=None, email_id=None, auto_suffix_duplicate: bool=True):
+    """
+    Create a new Customer. Returns JSON with customer name or error.
+    Required: customer_name, company. Others use defaults if not provided.
+    Optional: mobile_no, email_id (validated if provided).
+    If auto_suffix_duplicate=True, will create as "Name (2)", "Name (3)", ... on conflicts.
+    """
+    import re
+    # Hardcoded defaults
+    customer_group = customer_group or "Individual"
+    territory = territory or "All Territories"
+    price_list = price_list or "Standard Selling"
+    currency = currency or "INR"
+
+    if not (customer_name and company):
+        return {"error": "Missing required fields"}
+    if mobile_no:
+        mobile = str(mobile_no)
+        if not mobile.isdigit() or not (7 <= len(mobile) <= 15):
+            return {"error": "Invalid mobile_no. It should be 7-15 digits."}
+    if email_id:
+        email = str(email_id)
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return {"error": "Invalid email_id format."}
+
+    try:
+        # Ensure unique name if requested
+        target_name = customer_name
+        if frappe.db.exists("Customer", target_name):
+            if auto_suffix_duplicate:
+                target_name = _get_available_name(target_name)
+            else:
+                return {"error": _("Customer '{0}' already exists").format(customer_name)}
+
+        doc_fields = {
+            "doctype": "Customer",
+            "customer_name": target_name,
+            "customer_group": customer_group,
+            "territory": territory,
+            "default_price_list": price_list,
+            "default_currency": currency,
+            "customer_type": "Individual",
+            "company": company
+        }
+        if mobile_no:
+            doc_fields["mobile_no"] = mobile_no
+        if email_id:
+            doc_fields["email_id"] = email_id
+        doc = frappe.get_doc(doc_fields)
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        return {"message": "Customer created", "customer": doc.name}
+    except Exception as e:
+        frappe.db.rollback()
+        return {"error": str(e)}
+
+@frappe.whitelist(allow_guest=False)
+def edit_customer(customer_name, **fields):
+    """
+    Edit an existing Customer.
+    Pass field=value as kwargs. If new_name is provided, will rename the doc.
+    Common fields: mobile_no, email_id, customer_name, plus any DocType field.
+    Supports auto_suffix_duplicate when renaming.
+    """
+    import re
+    if not customer_name:
+        return {"error": "customer_name required"}
+    # Validation for common fields
+    if "mobile_no" in fields:
+        mobile = str(fields["mobile_no"])
+        if not mobile.isdigit() or not (7 <= len(mobile) <= 15):
+            return {"error": "Invalid mobile_no. It should be 7-15 digits."}
+    if "email_id" in fields:
+        email = str(fields["email_id"])
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return {"error": "Invalid email_id format."}
+
+    try:
+        doc = frappe.get_doc("Customer", customer_name)
+        auto_suffix_duplicate = fields.pop("auto_suffix_duplicate", True)
+        new_name = fields.pop("new_name", None)
+        for k, v in fields.items():
+            if hasattr(doc, k):
+                setattr(doc, k, v)
+            else:
+                doc.set(k, v)
+        doc.save(ignore_permissions=True)
+        if new_name:
+            target = new_name
+            if frappe.db.exists("Customer", target):
+                if auto_suffix_duplicate:
+                    target = _get_available_name(target)
+                else:
+                    return {"error": _("Customer '{0}' already exists").format(new_name)}
+            frappe.rename_doc("Customer", doc.name, target)
+            doc = frappe.get_doc("Customer", target)  # reload doc after rename
+        frappe.db.commit()
+        return {"message": "Customer updated", "customer": doc.name}
+    except Exception as e:
+        frappe.db.rollback()
+        return {"error": str(e)}
+
+@frappe.whitelist(allow_guest=False)
+def delete_customer(customer_name):
+    """Delete a customer by name"""
+    if not customer_name:
+        return {"error": "customer_name required"}
+    try:
+        frappe.delete_doc("Customer", customer_name, ignore_permissions=True)
+        frappe.db.commit()
+        return {"message": "Customer deleted", "customer": customer_name}
+    except Exception as e:
+        frappe.db.rollback()
+        return {"error": str(e)}
+
+@frappe.whitelist(allow_guest=False)
+def get_customers(page: int = 1, page_size: int = 20, search: str | None = None, company: str | None = None, order_by: str = "modified desc"):
+    """Return customers in a paginated way with optional search and company filter.
+    - page: 1-based page number
+    - page_size: items per page (max 200 recommended)
+    - search: matches against name and customer_name (LIKE)
+    - company: filter by company if provided
+    - order_by: SQL order by (safe columns)
+    """
+    page = int(page or 1)
+    page_size = int(page_size or 20)
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 20
+
+    filters = []
+    if company:
+        filters.append(["Customer", "company", "=", company])
+    if search:
+        # Use OR across name and customer_name via db.get_list 'or_filters'
+        or_filters = [
+            ["Customer", "name", "like", f"%{search}%"],
+            ["Customer", "customer_name", "like", f"%{search}%"],
+        ]
+    else:
+        or_filters = None
+
+    start = (page - 1) * page_size
+    fields = [
+        "name",
+        "customer_name",
+        "mobile_no",
+        "email_id",
+        "company",
+        "customer_group",
+        "territory",
+        "default_price_list",
+        "default_currency",
+        "modified",
+    ]
+
+    total = frappe.db.count("Customer", filters=filters)
+    items = frappe.db.get_list(
+        "Customer",
+        filters=filters,
+        or_filters=or_filters,
+        fields=fields,
+        order_by=order_by,
+        start=start,
+        page_length=page_size,
+        as_list=False,
+    )
+
+    has_next = (start + len(items)) < total
+    next_page = page + 1 if has_next else None
+
+    return {
+        "items": items,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "has_next": has_next,
+        "next_page": next_page,
+    }
+
+@frappe.whitelist(allow_guest=False)
+def sync_customer_transaction(**kwargs):
+    """
+    Unified endpoint for customer operations: create, edit, delete.
+    Usage: type='create', 'edit', or 'delete' and pass required fields for each.
+    """
+    data = frappe._dict(kwargs)
+    if not data.get("type"):
+        frappe.throw("Missing 'type' in request. Must be one of: create, edit, delete")
+
+    if data.type == "create":
+        return create_customer(
+            customer_name=data.get("customer_name"),
+            company=data.get("company"),
+            customer_group=data.get("customer_group"),
+            territory=data.get("territory"),
+            price_list=data.get("price_list"),
+            currency=data.get("currency"),
+            mobile_no=data.get("mobile_no"),
+            email_id=data.get("email_id"),
+            auto_suffix_duplicate=bool(data.get("auto_suffix_duplicate", True))
+        )
+    elif data.type == "edit":
+        customer_name = data.pop("customer_name", None)
+        if not customer_name:
+            frappe.throw("customer_name required for edit type")
+        fields = {k: v for k, v in data.items() if k not in ("type", "customer_name")}
+        if "auto_suffix_duplicate" not in fields:
+            fields["auto_suffix_duplicate"] = True
+        return edit_customer(customer_name, **fields)
+    elif data.type == "delete":
+        customer_name = data.get("customer_name")
+        if not customer_name:
+            frappe.throw("customer_name required for delete type")
+        return delete_customer(customer_name)
+    elif data.type == "list":
+        return get_customers(
+            page=data.get("page", 1),
+            page_size=data.get("page_size", 20),
+            search=data.get("search"),
+            company=data.get("company"),
+            order_by=data.get("order_by", "modified desc"),
+        )
+    else:
+        frappe.throw(f"Unknown customer transaction type: {data.type}")
