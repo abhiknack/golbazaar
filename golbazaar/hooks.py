@@ -254,8 +254,8 @@ override_doctype_class = {
 
 # ---------
 fixtures = [
-    "Workspace",
-    "Custom Field",
+    {"doctype": "Custom Field", "filters": [["module", "=", "Golbazaar"]]},
+    {"doctype": "Workspace", "filters": [["name", "in", ["Golbazaar"]]]}
 ]
 def get_data():
 	return [
