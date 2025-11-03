@@ -56,7 +56,8 @@ def create_customer(customer_name, company, customer_group=None, territory=None,
             "default_price_list": price_list,
             "default_currency": currency,
             "customer_type": "Individual",
-            "company": company
+            # Store provided company into represents_company
+            "represents_company": company
         }
         if mobile_no:
             doc_fields["mobile_no"] = mobile_no
@@ -147,7 +148,10 @@ def get_customers(page: int = 1, page_size: int = 20, search: str | None = None,
 
     filters = []
     if company:
-        filters.append(["Customer", "company", "=", company])
+        # Apply company filter using represents_company if available
+        customer_meta = frappe.get_meta("Customer")
+        if customer_meta.has_field("represents_company"):
+            filters.append(["Customer", "represents_company", "=", company])
     if search:
         # Use OR across name and customer_name via db.get_list 'or_filters'
         or_filters = [
@@ -163,7 +167,7 @@ def get_customers(page: int = 1, page_size: int = 20, search: str | None = None,
         "customer_name",
         "mobile_no",
         "email_id",
-        "company",
+        "represents_company",
         "customer_group",
         "territory",
         "default_price_list",
@@ -182,6 +186,11 @@ def get_customers(page: int = 1, page_size: int = 20, search: str | None = None,
         page_length=page_size,
         as_list=False,
     )
+
+    # Rename represents_company -> company in response for consumers
+    for it in items:
+        if "represents_company" in it:
+            it["company"] = it.pop("represents_company")
 
     has_next = (start + len(items)) < total
     next_page = page + 1 if has_next else None
