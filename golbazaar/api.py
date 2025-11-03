@@ -638,7 +638,6 @@ def get_customers(start=0, page_length=50, search_term="", last_updated_time=Non
 				customer.territory,
 				customer.mobile_no,
 				customer.email_id,
-				customer.phonenumber AS phone_no,
 				customer.tax_id,
 				customer.customer_group,
 				customer.modified
