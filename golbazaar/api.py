@@ -702,7 +702,7 @@ def get_customers(start=0, page_length=50, search_term="", last_updated_time=Non
 				"territory": customer.territory,
 				"mobile_no": customer.mobile_no,
 				"email_id": customer.email_id,
-				"phone_no": customer.phone_no,
+				"phone_no": customer.mobile_no,
 				"tax_id": customer.tax_id,
 				"customer_group": customer.customer_group,
 				"address": address_data,
