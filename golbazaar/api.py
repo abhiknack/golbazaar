@@ -22,7 +22,7 @@ def login_device(user_name, password, device_id):
 		check_password(user_name, password)
 		
 		# Clear any existing form dict noise
-		frappe.local.form_dict = {}
+		# Avoid overwriting frappe.local.form_dict to preserve required attributes like 'cmd'
 		
 		# Check if user exists in GolPos User
 		golpos_user = frappe.db.get_value("GolPos User", {"pos_user": user_name}, ["name"], as_dict=True)
