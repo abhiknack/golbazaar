@@ -3,15 +3,41 @@ from frappe import _
 
 
 def _get_available_name(base_name: str) -> str:
-    """Return a unique customer name by appending (2), (3), ... if needed."""
+    """Return a unique customer name by appending (2), (3), ... if needed.
+    Optimized to compute next suffix using a single SQL query instead of looping.
+    """
+    # Quick path: if exact base doesn't exist, use it
     if not frappe.db.exists("Customer", base_name):
         return base_name
-    counter = 2
-    while True:
-        candidate = f"{base_name} ({counter})"
-        if not frappe.db.exists("Customer", candidate):
-            return candidate
-        counter += 1
+
+    # Compute maximum numeric suffix for names matching: base_name (N)
+    # Example: for base_name = 'john', match 'john (2)', 'john (3)', ...
+    # Extract N using SUBSTRING/LOCATE and cast to UNSIGNED, then take MAX
+    like_pattern = f"{base_name} (%"
+    sql = f"""
+        SELECT COALESCE(MAX(CAST(
+            SUBSTRING(
+                name,
+                LOCATE('(', name) + 1,
+                LOCATE(')', name) - LOCATE('(', name) - 1
+            ) AS UNSIGNED
+        )), 1) AS max_suffix
+        FROM `tabCustomer`
+        WHERE name LIKE %s AND name REGEXP %s
+    """
+    # REGEXP to ensure we only consider names like: base_name (number)
+    regexp_pattern = f"^{frappe.db.escape_string(base_name).decode() if hasattr(frappe.db, 'escape_string') else base_name} \\([0-9]+\\)$"
+    try:
+        res = frappe.db.sql(sql, (like_pattern, regexp_pattern))
+        max_suffix = res[0][0] if res and res[0] and res[0][0] else 1
+        next_suffix = int(max_suffix) + 1
+    except Exception:
+        # Fallback to iterative approach if SQL fails for any reason
+        next_suffix = 2
+        while frappe.db.exists("Customer", f"{base_name} ({next_suffix})"):
+            next_suffix += 1
+
+    return f"{base_name} ({next_suffix})"
 
 @frappe.whitelist(allow_guest=False)
 def create_customer(customer_name, company, customer_group=None, territory=None, price_list=None, currency=None, mobile_no=None, email_id=None, auto_suffix_duplicate: bool=True):
@@ -56,8 +82,8 @@ def create_customer(customer_name, company, customer_group=None, territory=None,
             "default_price_list": price_list,
             "default_currency": currency,
             "customer_type": "Individual",
-            # Store provided company into represents_company
-            "represents_company": company
+            # Store provided company into new link field
+            "gol_customer_company": company
         }
         if mobile_no:
             doc_fields["mobile_no"] = mobile_no
@@ -96,6 +122,9 @@ def edit_customer(customer_name, **fields):
         doc = frappe.get_doc("Customer", customer_name)
         auto_suffix_duplicate = fields.pop("auto_suffix_duplicate", True)
         new_name = fields.pop("new_name", None)
+        # Map incoming 'company' to the new link field
+        if "company" in fields and "gol_customer_company" not in fields:
+            fields["gol_customer_company"] = fields.pop("company")
         for k, v in fields.items():
             if hasattr(doc, k):
                 setattr(doc, k, v)
@@ -146,51 +175,53 @@ def get_customers(page: int = 1, page_size: int = 20, search: str | None = None,
     if page_size < 1:
         page_size = 20
 
-    filters = []
+    # Build raw SQL to avoid framework adding permission conditions that refer to a non-existent 'company' column
+    conditions = []
+    params = []
     if company:
-        # Apply company filter using represents_company if available
-        customer_meta = frappe.get_meta("Customer")
-        if customer_meta.has_field("represents_company"):
-            filters.append(["Customer", "represents_company", "=", company])
+        # Filter by gol_customer_company when provided
+        meta = frappe.get_meta("Customer")
+        if meta.has_field("gol_customer_company"):
+            conditions.append("gol_customer_company = %s")
+            params.append(company)
     if search:
-        # Use OR across name and customer_name via db.get_list 'or_filters'
-        or_filters = [
-            ["Customer", "name", "like", f"%{search}%"],
-            ["Customer", "customer_name", "like", f"%{search}%"],
-        ]
-    else:
-        or_filters = None
+        conditions.append("(name like %s or customer_name like %s)")
+        like = f"%{search}%"
+        params.extend([like, like])
 
+    where_sql = f" where {' and '.join(conditions)}" if conditions else ""
     start = (page - 1) * page_size
-    fields = [
-        "name",
-        "customer_name",
-        "mobile_no",
-        "email_id",
-        "represents_company",
-        "customer_group",
-        "territory",
-        "default_price_list",
-        "default_currency",
-        "modified",
-    ]
 
-    total = frappe.db.count("Customer", filters=filters)
-    items = frappe.db.get_list(
-        "Customer",
-        filters=filters,
-        or_filters=or_filters,
-        fields=fields,
-        order_by=order_by,
-        start=start,
-        page_length=page_size,
-        as_list=False,
+    # very small whitelist for order_by to prevent SQL injection
+    allowed_order_fields = {"modified", "name", "customer_name"}
+    try:
+        ob_field, ob_dir = order_by.split()
+        if ob_field not in allowed_order_fields or ob_dir.lower() not in {"asc", "desc"}:
+            order_clause = " order by modified desc"
+        else:
+            order_clause = f" order by {ob_field} {ob_dir}"
+    except Exception:
+        order_clause = " order by modified desc"
+
+    total = frappe.db.sql(f"select count(*) from `tabCustomer`{where_sql}", params)[0][0]
+    rows = frappe.db.sql(
+        f"""
+        select name, customer_name, mobile_no, email_id, gol_customer_company, customer_group,
+               territory, default_price_list, default_currency, modified
+        from `tabCustomer`
+        {where_sql}
+        {order_clause}
+        limit %s offset %s
+        """,
+        params + [page_size, start],
+        as_dict=True,
     )
+    items = rows
 
-    # Rename represents_company -> company in response for consumers
+    # Rename gol_customer_company -> company in response for consumers
     for it in items:
-        if "represents_company" in it:
-            it["company"] = it.pop("represents_company")
+        if "gol_customer_company" in it:
+            it["company"] = it.pop("gol_customer_company")
 
     has_next = (start + len(items)) < total
     next_page = page + 1 if has_next else None
