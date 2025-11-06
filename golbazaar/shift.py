@@ -35,7 +35,8 @@ def open_shift(pos_profile, user, opening_amount, company, branch, system_shift_
                 "posting_time": posting_time,
                 "opening_amount": opening_amount,
                 "branch": branch,
-                "custom_system_shift_id": system_shift_id,
+                # Save external/system shift id into custom link field
+                "gol_pos_shift_id": system_shift_id,
                 "period_start_date": posting_date,  # Add required field
                 "balance_details": [{                # Add required child table field
                     "mode_of_payment": "Cash",     # Use Cash or fetch dynamically if needed
